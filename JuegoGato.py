@@ -1,5 +1,5 @@
-import turtle 
-import sys
+import turtle
+import os
 
 screen = turtle.Screen()
 draw = turtle.Turtle()
@@ -12,17 +12,17 @@ posicion = []
 terminar = False
 reiniciar = True
 
-def maintitulo(texto, px, py, tam):
+def tituloPrincipal(texto, px, py, tam):
     draw.penup()
     draw.goto(px, py)
     draw.color("orange")
     draw.write(texto, align="center", font=("Baloo Bhaijaan", tam, "bold"))
     draw.pendown()
 
-# título
+# Título
 ventanaan = screen.window_width()
 ventanaA = screen.window_height()
-maintitulo("TicTacToc", 0, ventanaA // 2 - 150, 100)
+tituloPrincipal("TicTacToc", 0, ventanaA // 2 - 150, 100)
 
 def tituloganaste(texto, px, py, tam):
     draw.penup()
@@ -105,9 +105,18 @@ def boton(px, py, tam, tam2):
 boton(-250, -250, 150, 70)
 
 turno = 0
+contador_juegos = 1  
+
+def guardar_jugadas(jugadas, juego_num):
+    nombre_archivo = f'jugada{juego_num}.txt'
+    while os.path.exists(nombre_archivo):
+        juego_num += 1
+        nombre_archivo = f'jugada{juego_num}.txt'
+    with open(nombre_archivo, 'w') as file:
+        file.write(str(jugadas))
 
 def click(x, y):
-    global turno, terminar
+    global turno, terminar, contador_juegos
     if terminar:
         return
     for index, (px, py) in enumerate(positions):
@@ -115,34 +124,37 @@ def click(x, y):
             if jugadas_ambos[index] != '':
                 print("Este cuadro ya está ocupado")
                 return
-            while turno < 9:
+            if turno < 9:
                 if turno % 2 == 0:
                     Circulo(px, py)
                     jugadas_o.append((px, py))
                     jugadas_ambos[index] = 'o'
-                    posicion.append((px, py))
-                    print('jugada de jugador O:', jugadas_o)
-                    print("posiciones ocupadas", jugadas_ambos)
+                    print('Jugada de jugador O:', jugadas_o)
+                    print("Posiciones ocupadas:", jugadas_ambos)
                     
-                    if verificar(jugadas_o):
-                        print('¡Circulo Gana!')
-                        tituloganaste("¡Circulo Gana!", 0, screen.window_height() // 2 - 600, 50)
+                    ganador, combinacion = verificar(jugadas_o)
+                    if ganador:
+                        print('¡Círculo Gana!')
+                        tituloganaste("¡Círculo Gana!", 0, screen.window_height() // 2 - 600, 50)
                         terminar = True
+                        guardar_jugadas(jugadas_ambos, contador_juegos)
+                        contador_juegos += 1
                         print("¿Desea reiniciar el juego?")
                         return
                 else:
                     cruz(px, py)
                     jugadas_x.append((px, py))
                     jugadas_ambos[index] = 'x'
-                    posicion.append((px, py))
-
-                    print('jugada de jugador X:', jugadas_x)
-                    print("posiciones ocupadas", jugadas_ambos)
+                    print('Jugada de jugador X:', jugadas_x)
+                    print("Posiciones ocupadas:", jugadas_ambos)
                     
-                    if verificar(jugadas_x):
+                    ganador, combinacion = verificar(jugadas_x)
+                    if ganador:
                         print("¡X Gana!")
                         tituloganaste("¡X Gana!", 0, screen.window_height() // 2 - 600, 50)
                         terminar = True
+                        guardar_jugadas(jugadas_ambos, contador_juegos)
+                        contador_juegos += 1
                         return
                 
                 turno += 1
@@ -168,15 +180,8 @@ jugadas_ganadoras = [
 def verificar(jugadas):
     for combinacion in jugadas_ganadoras:
         if all(pos in jugadas for pos in combinacion):
-            return True
-    return False
-
-def no_duplicados(ambos):
-    for i in positions:
-        if all(linea in ambos for linea in i):
-            return True
-    return False
+            return True, combinacion
+    return False, []
 
 screen.onclick(click)
 turtle.done()
-
